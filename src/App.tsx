@@ -76,7 +76,6 @@ export const App: React.FC = () => {
       });
   };
 
-  // Обработчик для добавления новой задачи
   const handleAddTodo = (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -104,9 +103,9 @@ export const App: React.FC = () => {
       completed: false,
     })
       .then(newTodo => {
-        setTodos(currentTodos => [...currentTodos, newTodo]); // Додаємо нову тудушку у список
+        setTodos(currentTodos => [...currentTodos, newTodo]);
         setTempTodo(null); // Видаляємо тимчасову тудушку після отримання відповіді
-        setNewTodoTitle(''); // Очищаємо поле вводу
+        setNewTodoTitle('');
       })
       .catch(() => setErrorMessage('Unable to add todo'))
       .finally(() => setIsSubmitting(false));
@@ -124,7 +123,6 @@ export const App: React.FC = () => {
             })}
             data-cy="ToggleAllButton"
           />
-
           {/* Форма для добавления новой задачи */}
           <form onSubmit={handleAddTodo}>
             <input
@@ -139,7 +137,6 @@ export const App: React.FC = () => {
             />
           </form>
         </header>
-
         <section className="todoapp__main" data-cy="TodoList">
           {filteredTodos.map(todo => (
             <div
@@ -155,11 +152,9 @@ export const App: React.FC = () => {
                   checked={todo.completed}
                 />
               </label>
-
               <span data-cy="TodoTitle" className="todo__title">
                 {todo.title}
               </span>
-
               <button
                 type="button"
                 className="todo__remove"
@@ -168,41 +163,22 @@ export const App: React.FC = () => {
               >
                 ×
               </button>
-            </div>
-          ))}
-
-          {/* Если есть временная тудушка, показываем ее */}
-          {tempTodo && (
-            <div key={tempTodo.id} data-cy="TempTodo" className="todo">
-              <label className="todo__status-label">
-                <input
-                  data-cy="TodoStatus"
-                  type="checkbox"
-                  className="todo__status"
-                  checked={false}
-                  disabled
-                />
-              </label>
-
-              <span data-cy="TodoTitle" className="todo__title">
-                {tempTodo.title}
-              </span>
-
-              {/* Отображаем индикатор загрузки */}
-              <div data-cy="TodoLoader" className="modal overlay">
-                <div className="modal-background has-background-white-ter" />
+              <div
+                data-cy="TodoLoader"
+                className={classNames('modal overlay', {
+                  'is-active': !todo.id,
+                })}
+              >
                 <div className="loader" />
               </div>
             </div>
-          )}
+          ))}
         </section>
-
         {todos.length > 0 && (
           <footer className="todoapp__footer" data-cy="Footer">
             <span className="todo-count" data-cy="TodosCounter">
               {notCompletedTodos.length} items left{''}
             </span>
-
             <nav className="filter" data-cy="Filter">
               <a
                 href="#/"
@@ -214,7 +190,6 @@ export const App: React.FC = () => {
               >
                 All
               </a>
-
               <a
                 href="#/active"
                 className={classNames('filter__link', {
@@ -225,7 +200,6 @@ export const App: React.FC = () => {
               >
                 Active
               </a>
-
               <a
                 href="#/completed"
                 className={classNames('filter__link', {
@@ -237,7 +211,6 @@ export const App: React.FC = () => {
                 Completed
               </a>
             </nav>
-
             <button
               type="button"
               className="todoapp__clear-completed"
@@ -249,7 +222,6 @@ export const App: React.FC = () => {
           </footer>
         )}
       </div>
-
       <div
         data-cy="ErrorNotification"
         className={classNames(
