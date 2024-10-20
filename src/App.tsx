@@ -12,8 +12,9 @@ export const App: React.FC = () => {
   const [newTodoTitle, setNewTodoTitle] = useState(''); // Состояние для заголовка новой задачи
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Отслеживание состояния отправки
   const inputRef = useRef<HTMLInputElement>(null);
+  const [tempTodo, setTempTodo] = useState<Todo | null>(null); // Состояние для временной задачи
 
   useEffect(() => {
     if (inputRef.current && !isSubmitting) {
@@ -79,34 +80,36 @@ export const App: React.FC = () => {
   const handleAddTodo = (event: React.FormEvent) => {
     event.preventDefault();
 
-    setIsSubmitting(true);
-
     if (!newTodoTitle.trim()) {
       setErrorMessage('Title should not be empty');
-
-      setIsSubmitting(false);
 
       return;
     }
 
+    // Створюємо тимчасову тудушку перед відправкою запиту на сервер
+    const tempTodoItem: Todo = {
+      id: 0, // Тимчасовий id
+      title: newTodoTitle,
+      completed: false,
+      userId: USER_ID,
+    };
+
+    setTempTodo(tempTodoItem); // Додаємо тимчасову тудушку у стейт
+    setIsSubmitting(true);
+
+    // Відправляємо запит на створення тудушки
     createTodo({
       title: newTodoTitle,
       userId: USER_ID,
       completed: false,
     })
       .then(newTodo => {
-        // Добавляем новую задачу в список
-        setTodos(currentTodos => [...currentTodos, newTodo]);
-
-        // Очищаем поле только после успешного создания
-        setNewTodoTitle('');
+        setTodos(currentTodos => [...currentTodos, newTodo]); // Додаємо нову тудушку у список
+        setTempTodo(null); // Видаляємо тимчасову тудушку після отримання відповіді
+        setNewTodoTitle(''); // Очищаємо поле вводу
       })
-      .catch(() => {
-        setErrorMessage('Unable to add todo');
-      })
-      .finally(() => {
-        setIsSubmitting(false);
-      });
+      .catch(() => setErrorMessage('Unable to add todo'))
+      .finally(() => setIsSubmitting(false));
   };
 
   return (
@@ -130,7 +133,7 @@ export const App: React.FC = () => {
               className="todoapp__new-todo"
               placeholder="What needs to be done?"
               value={newTodoTitle}
-              onChange={event => setNewTodoTitle(event.target.value.trim())}
+              onChange={event => setNewTodoTitle(event.target.value)}
               ref={inputRef}
               disabled={isSubmitting}
             />
@@ -165,13 +168,33 @@ export const App: React.FC = () => {
               >
                 ×
               </button>
+            </div>
+          ))}
 
+          {/* Если есть временная тудушка, показываем ее */}
+          {tempTodo && (
+            <div key={tempTodo.id} data-cy="TempTodo" className="todo">
+              <label className="todo__status-label">
+                <input
+                  data-cy="TodoStatus"
+                  type="checkbox"
+                  className="todo__status"
+                  checked={false}
+                  disabled
+                />
+              </label>
+
+              <span data-cy="TodoTitle" className="todo__title">
+                {tempTodo.title}
+              </span>
+
+              {/* Отображаем индикатор загрузки */}
               <div data-cy="TodoLoader" className="modal overlay">
                 <div className="modal-background has-background-white-ter" />
                 <div className="loader" />
               </div>
             </div>
-          ))}
+          )}
         </section>
 
         {todos.length > 0 && (
