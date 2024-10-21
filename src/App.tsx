@@ -15,6 +15,9 @@ export const App: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false); // Отслеживание состояния отправки
   const inputRef = useRef<HTMLInputElement>(null);
   const [tempTodo, setTempTodo] = useState<Todo | null>(null); // Состояние для временной задачи
+  const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null); // Состояние для отслеживания  удаляемой задачи
+
+  // компоненты, loader во время remove,
 
   useEffect(() => {
     if (inputRef.current && !isSubmitting) {
@@ -65,6 +68,8 @@ export const App: React.FC = () => {
   }
 
   const handleDeleteTodo = (todoId: number) => {
+    setDeletingTodoId(todoId); // Устанавливаем ID удаляемой задачи
+
     deleteTodo(todoId)
       .then(() => {
         setTodos(currentTodos =>
@@ -72,12 +77,17 @@ export const App: React.FC = () => {
         );
       })
       .catch(() => {
-        setErrorMessage('Unable to delete todo');
+        setErrorMessage('Unable to delete a todo');
+      })
+      .finally(() => {
+        setDeletingTodoId(null);
       });
   };
 
   const handleAddTodo = (event: React.FormEvent) => {
     event.preventDefault();
+
+    const trimmedTitle = newTodoTitle.trim();
 
     if (!newTodoTitle.trim()) {
       setErrorMessage('Title should not be empty');
@@ -85,30 +95,30 @@ export const App: React.FC = () => {
       return;
     }
 
-    // Створюємо тимчасову тудушку перед відправкою запиту на сервер
     const tempTodoItem: Todo = {
-      id: 0, // Тимчасовий id
+      id: 0,
       title: newTodoTitle,
       completed: false,
       userId: USER_ID,
     };
 
-    setTempTodo(tempTodoItem); // Додаємо тимчасову тудушку у стейт
+    setTempTodo(tempTodoItem);
     setIsSubmitting(true);
 
-    // Відправляємо запит на створення тудушки
     createTodo({
-      title: newTodoTitle,
+      title: trimmedTitle,
       userId: USER_ID,
       completed: false,
     })
       .then(newTodo => {
         setTodos(currentTodos => [...currentTodos, newTodo]);
-        setTempTodo(null); // Видаляємо тимчасову тудушку після отримання відповіді
         setNewTodoTitle('');
       })
-      .catch(() => setErrorMessage('Unable to add todo'))
-      .finally(() => setIsSubmitting(false));
+      .catch(() => setErrorMessage('Unable to add a todo'))
+      .finally(() => {
+        setIsSubmitting(false);
+        setTempTodo(null);
+      });
   };
 
   return (
@@ -123,7 +133,6 @@ export const App: React.FC = () => {
             })}
             data-cy="ToggleAllButton"
           />
-          {/* Форма для добавления новой задачи */}
           <form onSubmit={handleAddTodo}>
             <input
               data-cy="NewTodoField"
@@ -152,6 +161,7 @@ export const App: React.FC = () => {
                   checked={todo.completed}
                 />
               </label>
+
               <span data-cy="TodoTitle" className="todo__title">
                 {todo.title}
               </span>
@@ -163,17 +173,52 @@ export const App: React.FC = () => {
               >
                 ×
               </button>
+
               <div
                 data-cy="TodoLoader"
                 className={classNames('modal overlay', {
-                  'is-active': !todo.id,
+                  'is-active':
+                    (isSubmitting && !tempTodo) || deletingTodoId === todo.id,
                 })}
               >
                 <div className="loader" />
+                <div className="modal-background has-background-white-ter" />
               </div>
             </div>
           ))}
+
+          {tempTodo && (
+            <div data-cy="Todo" className="todo">
+              <label className="todo__status-label">
+                <input
+                  data-cy="TodoStatus"
+                  type="checkbox"
+                  className="todo__status"
+                  checked={tempTodo.completed}
+                  disabled
+                />
+              </label>
+
+              <span data-cy="TodoTitle" className="todo__title">
+                {tempTodo.title}
+              </span>
+              <button
+                type="button"
+                className="todo__remove"
+                data-cy="TodoDelete"
+                disabled
+              >
+                ×
+              </button>
+
+              <div data-cy="TodoLoader" className="modal overlay is-active">
+                <div className="loader" />
+                <div className="modal-background has-background-white-ter" />
+              </div>
+            </div>
+          )}
         </section>
+
         {todos.length > 0 && (
           <footer className="todoapp__footer" data-cy="Footer">
             <span className="todo-count" data-cy="TodosCounter">
