@@ -1,23 +1,22 @@
-/* eslint-disable jsx-a11y/label-has-associated-control */
-/* eslint-disable jsx-a11y/control-has-associated-label */
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { UserWarning } from './UserWarning'; // Компонент, который показывает предупреждение, если нет пользователя
-import { USER_ID, getTodos, deleteTodo, createTodo } from './api/todos'; // Константы и функции для работы с задачами
-import { Todo } from './types/Todo'; // Тип данных для задачи
-import { FilterOptions } from './types/FilterOptions'; // Опции для фильтрации задач (все, активные, завершённые)
-import classNames from 'classnames'; // Библиотека для удобной работы с классами CSS
+// App.tsx
+import React, { useState, useEffect, useRef } from 'react';
+import { UserWarning } from './UserWarning';
+import { USER_ID, getTodos, deleteTodo, createTodo } from './api/todos';
+import { Todo } from './types/Todo';
+import { FilterOptions } from './types/FilterOptions';
+import classNames from 'classnames';
+import { Header } from './components/Header';
+import { TodoList } from './components/TodoList'; // Импортируем новый компонент TodoList
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [newTodoTitle, setNewTodoTitle] = useState(''); // Состояние для заголовка новой задачи
+  const [newTodoTitle, setNewTodoTitle] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
-  const [isSubmitting, setIsSubmitting] = useState(false); // Отслеживание состояния отправки
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [tempTodo, setTempTodo] = useState<Todo | null>(null); // Состояние для временной задачи
-  const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null); // Состояние для отслеживания  удаляемой задачи
-
-  // компоненты, loader во время remove,
+  const [tempTodo, setTempTodo] = useState<Todo | null>(null);
+  const [deletingTodoId, setDeletingTodoId] = useState<number | null>(null);
 
   useEffect(() => {
     if (inputRef.current && !isSubmitting) {
@@ -39,25 +38,10 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     setErrorMessage(null);
-
     getTodos()
       .then(setTodos)
       .catch(() => setErrorMessage('Unable to load todos'));
   }, []);
-
-  const filteredTodos = useMemo(() => {
-    return todos.filter(todo => {
-      if (filter === FilterOptions.Active) {
-        return !todo.completed;
-      }
-
-      if (filter === FilterOptions.Completed) {
-        return todo.completed;
-      }
-
-      return true;
-    });
-  }, [todos, filter]);
 
   const hasAllTodosCompleted = todos.every(todo => todo.completed);
   const notCompletedTodos = todos.filter(todo => !todo.completed);
@@ -68,8 +52,7 @@ export const App: React.FC = () => {
   }
 
   const handleDeleteTodo = (todoId: number) => {
-    setDeletingTodoId(todoId); // Устанавливаем ID удаляемой задачи
-
+    setDeletingTodoId(todoId);
     deleteTodo(todoId)
       .then(() => {
         setTodos(currentTodos =>
@@ -89,16 +72,13 @@ export const App: React.FC = () => {
       handleDeleteTodo(todo.id),
     );
 
-    Promise.all(deletePromises)
-      .then(() => {})
-      .catch(() => {
-        setErrorMessage('Unable to delete one or more todos');
-      });
+    Promise.all(deletePromises).catch(() => {
+      setErrorMessage('Unable to delete one or more todos');
+    });
   };
 
   const handleAddTodo = (event: React.FormEvent) => {
     event.preventDefault();
-
     const trimmedTitle = newTodoTitle.trim();
 
     if (!newTodoTitle.trim()) {
@@ -137,99 +117,23 @@ export const App: React.FC = () => {
     <div className="todoapp">
       <h1 className="todoapp__title">todos</h1>
       <div className="todoapp__content">
-        <header className="todoapp__header">
-          <button
-            type="button"
-            className={classNames('todoapp__toggle-all', {
-              active: hasAllTodosCompleted,
-            })}
-            data-cy="ToggleAllButton"
-          />
-          <form onSubmit={handleAddTodo}>
-            <input
-              data-cy="NewTodoField"
-              type="text"
-              className="todoapp__new-todo"
-              placeholder="What needs to be done?"
-              value={newTodoTitle}
-              onChange={event => setNewTodoTitle(event.target.value)}
-              ref={inputRef}
-              disabled={isSubmitting}
-            />
-          </form>
-        </header>
-        <section className="todoapp__main" data-cy="TodoList">
-          {filteredTodos.map(todo => (
-            <div
-              key={todo.id}
-              data-cy="Todo"
-              className={classNames('todo', { completed: todo.completed })}
-            >
-              <label className="todo__status-label">
-                <input
-                  data-cy="TodoStatus"
-                  type="checkbox"
-                  className="todo__status"
-                  checked={todo.completed}
-                />
-              </label>
+        <Header
+          hasAllTodosCompleted={hasAllTodosCompleted}
+          handleAddTodo={handleAddTodo}
+          newTodoTitle={newTodoTitle}
+          setNewTodoTitle={setNewTodoTitle}
+          inputRef={inputRef}
+          isSubmitting={isSubmitting}
+        />
 
-              <span data-cy="TodoTitle" className="todo__title">
-                {todo.title}
-              </span>
-              <button
-                type="button"
-                className="todo__remove"
-                data-cy="TodoDelete"
-                onClick={() => handleDeleteTodo(todo.id)}
-              >
-                ×
-              </button>
-
-              <div
-                data-cy="TodoLoader"
-                className={classNames('modal overlay', {
-                  'is-active':
-                    (isSubmitting && !tempTodo) || deletingTodoId === todo.id,
-                })}
-              >
-                <div className="loader" />
-                <div className="modal-background has-background-white-ter" />
-              </div>
-            </div>
-          ))}
-
-          {tempTodo && (
-            <div data-cy="Todo" className="todo">
-              <label className="todo__status-label">
-                <input
-                  data-cy="TodoStatus"
-                  type="checkbox"
-                  className="todo__status"
-                  checked={tempTodo.completed}
-                  disabled
-                />
-              </label>
-
-              <span data-cy="TodoTitle" className="todo__title">
-                {tempTodo.title}
-              </span>
-              <button
-                type="button"
-                className="todo__remove"
-                data-cy="TodoDelete"
-                disabled
-              >
-                ×
-              </button>
-
-              <div data-cy="TodoLoader" className="modal overlay is-active">
-                <div className="loader" />
-                <div className="modal-background has-background-white-ter" />
-              </div>
-            </div>
-          )}
-        </section>
+        <TodoList
+          todos={todos}
+          filter={filter}
+          isSubmitting={isSubmitting}
+          deletingTodoId={deletingTodoId}
+          tempTodo={tempTodo}
+          onDelete={handleDeleteTodo}
+        />
 
         {todos.length > 0 && (
           <footer className="todoapp__footer" data-cy="Footer">

@@ -1,17 +1,28 @@
+/* eslint-disable jsx-a11y/label-has-associated-control */
+/* eslint-disable jsx-a11y/control-has-associated-label */
 import React from 'react';
 import classNames from 'classnames';
-import { Todo } from '../types/Todo';
+import { Todo } from '../types/Todo'; // Убедитесь, что путь к типам правильный
 
-interface Props {
+interface TodoItemProps {
   todo: Todo;
-  isLoading: boolean;
+  onDelete: (todoId: number) => void;
+  isSubmitting: boolean;
+  deletingTodoId: number | null;
+  tempTodo: Todo | null;
 }
 
-export const TodoItem: React.FC<Props> = ({ todo, isLoading }) => {
+export const TodoItem: React.FC<TodoItemProps> = ({
+  todo,
+  onDelete,
+  isSubmitting,
+  deletingTodoId,
+  tempTodo,
+}) => {
   return (
     <div
-      className={classNames('todo', { completed: todo.completed })}
       data-cy="Todo"
+      className={classNames('todo', { completed: todo.completed })}
     >
       <label className="todo__status-label">
         <input
@@ -19,17 +30,31 @@ export const TodoItem: React.FC<Props> = ({ todo, isLoading }) => {
           type="checkbox"
           className="todo__status"
           checked={todo.completed}
-          disabled
         />
       </label>
+
       <span data-cy="TodoTitle" className="todo__title">
-        {isLoading ? <span className="loader" /> : todo.title}
+        {todo.title}
       </span>
-      {isLoading && (
-        <div data-cy="TodoLoader" className="modal overlay is-active">
-          <div className="loader" />
-        </div>
-      )}
+      <button
+        type="button"
+        className="todo__remove"
+        data-cy="TodoDelete"
+        onClick={() => onDelete(todo.id)}
+      >
+        ×
+      </button>
+
+      <div
+        data-cy="TodoLoader"
+        className={classNames('modal overlay', {
+          'is-active':
+            (isSubmitting && !tempTodo) || deletingTodoId === todo.id,
+        })}
+      >
+        <div className="loader" />
+        <div className="modal-background has-background-white-ter" />
+      </div>
     </div>
   );
 };
