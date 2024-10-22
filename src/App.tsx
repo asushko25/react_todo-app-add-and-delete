@@ -84,6 +84,18 @@ export const App: React.FC = () => {
       });
   };
 
+  const handleClearCompleted = () => {
+    const deletePromises = completedTodos.map(todo =>
+      handleDeleteTodo(todo.id),
+    );
+
+    Promise.all(deletePromises)
+      .then(() => {})
+      .catch(() => {
+        setErrorMessage('Unable to delete one or more todos');
+      });
+  };
+
   const handleAddTodo = (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -256,11 +268,13 @@ export const App: React.FC = () => {
                 Completed
               </a>
             </nav>
+
             <button
               type="button"
               className="todoapp__clear-completed"
               data-cy="ClearCompletedButton"
               disabled={!completedTodos.length}
+              onClick={handleClearCompleted}
             >
               Clear completed
             </button>
