@@ -1,12 +1,13 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
 import React, { useMemo } from 'react';
-import { Todo } from '../types/Todo'; // Убедитесь, что путь к типам правильный
-import { TodoItem } from './TodoItem'; // Импортируем компонент TodoItem
+import { Todo } from '../types/Todo';
+import { TodoItem } from './TodoItem';
+import { FilterOptions } from '../types/FilterOptions';
 
 interface TodoListProps {
   todos: Todo[];
-  filter: string;
+  filter: FilterOptions;
   isSubmitting: boolean;
   deletingTodoId: number | null;
   tempTodo: Todo | null;
@@ -23,11 +24,11 @@ export const TodoList: React.FC<TodoListProps> = ({
 }) => {
   const filteredTodos = useMemo(() => {
     return todos.filter(todo => {
-      if (filter === 'active') {
+      if (filter === FilterOptions.Active) {
         return !todo.completed;
       }
 
-      if (filter === 'completed') {
+      if (filter === FilterOptions.Completed) {
         return todo.completed;
       }
 

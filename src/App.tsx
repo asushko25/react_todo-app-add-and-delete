@@ -1,12 +1,11 @@
-// App.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { UserWarning } from './UserWarning';
 import { USER_ID, getTodos, deleteTodo, createTodo } from './api/todos';
 import { Todo } from './types/Todo';
-import { FilterOptions } from './types/FilterOptions';
-import classNames from 'classnames';
 import { Header } from './components/Header';
-import { TodoList } from './components/TodoList'; // Импортируем новый компонент TodoList
+import { TodoList } from './components/TodoList';
+import { ErrorItem } from './components/ErrorItem';
+import { FooterItem } from './components/Footer';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -136,72 +135,19 @@ export const App: React.FC = () => {
         />
 
         {todos.length > 0 && (
-          <footer className="todoapp__footer" data-cy="Footer">
-            <span className="todo-count" data-cy="TodosCounter">
-              {notCompletedTodos.length} items left{''}
-            </span>
-            <nav className="filter" data-cy="Filter">
-              <a
-                href="#/"
-                className={classNames('filter__link', {
-                  selected: filter === FilterOptions.All,
-                })}
-                data-cy="FilterLinkAll"
-                onClick={() => setFilter(FilterOptions.All)}
-              >
-                All
-              </a>
-              <a
-                href="#/active"
-                className={classNames('filter__link', {
-                  selected: filter === FilterOptions.Active,
-                })}
-                data-cy="FilterLinkActive"
-                onClick={() => setFilter(FilterOptions.Active)}
-              >
-                Active
-              </a>
-              <a
-                href="#/completed"
-                className={classNames('filter__link', {
-                  selected: filter === FilterOptions.Completed,
-                })}
-                data-cy="FilterLinkCompleted"
-                onClick={() => setFilter(FilterOptions.Completed)}
-              >
-                Completed
-              </a>
-            </nav>
-
-            <button
-              type="button"
-              className="todoapp__clear-completed"
-              data-cy="ClearCompletedButton"
-              disabled={!completedTodos.length}
-              onClick={handleClearCompleted}
-            >
-              Clear completed
-            </button>
-          </footer>
+          <FooterItem
+            notCompletedTodos={notCompletedTodos}
+            setFilter={setFilter}
+            filter={filter}
+            handleClearCompleted={handleClearCompleted}
+            completedTodos={completedTodos}
+          />
         )}
       </div>
-      <div
-        data-cy="ErrorNotification"
-        className={classNames(
-          'notification is-danger is-light has-text-weight-normal',
-          {
-            hidden: !errorMessage,
-          },
-        )}
-      >
-        <button
-          data-cy="HideErrorButton"
-          type="button"
-          className="delete"
-          onClick={() => setErrorMessage(null)}
-        />
-        {errorMessage}
-      </div>
+      <ErrorItem
+        errorMessage={errorMessage}
+        setErrorMessage={setErrorMessage}
+      />
     </div>
   );
 };
